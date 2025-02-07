@@ -5,6 +5,11 @@ const units = "metric";
 const apiUrl = `${baseUrl}weather?q=${city}&units=${units}&APPID=${apiKey}`;
 const forecastApiUrl = `${baseUrl}forecast?q=${city}&units=${units}&APPID=${apiKey}`;
 
+function convertTo24HourTime(timestamp, timezoneOffset) {
+  return new Date((timestamp + timezoneOffset) * 1000)
+    .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 async function checkWeather() {
   try {
     const response = await fetch(apiUrl);
@@ -15,12 +20,14 @@ async function checkWeather() {
     document.getElementById('city').innerHTML = data.name;
     document.getElementById('temp').innerHTML = `${data.main.temp.toFixed(1)}°C`;
     
-    // Convert UNIX timestamp to readable time
-    document.getElementById('sunrise').innerHTML = new Date(data.sys.sunrise * 1000)
-      .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-
-    document.getElementById('sunset').innerHTML = new Date(data.sys.sunset * 1000)
-      .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    document.getElementById('sunrise').innerHTML = convertTo24HourTime(data.sys.sunrise, data.timezone);
+    document.getElementById('sunset').innerHTML = convertTo24HourTime(data.sys.sunset, data.timezone);
+    document.getElementById('time').innerHTML = `Local Time: ${convertTo24HourTime(data.dt, data.timezone)}`;
+  
+    document.getElementById('weather-condition').innerHTML = data.weather[0].description;
+    const weatherIcon = document.getElementById('weather-icon').querySelector('img');
+    weatherIcon.src = `http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
+    weatherIcon.alt = data.weather[0].description;  
 
   } catch (error) {
     console.error('Error fetching weather data:', error);
