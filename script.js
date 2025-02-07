@@ -25,6 +25,7 @@ function capitalizeFirstLetter(text) {
 async function checkWeather() {
   try {
     const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     const data = await response.json();
     
     console.log(data);
