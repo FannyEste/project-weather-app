@@ -47,37 +47,33 @@ document.addEventListener('DOMContentLoaded', () => {
 async function getWeatherForecast() {
   try {
     const response = await fetch(forecastApiUrl);
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
     const forecastData = await response.json();
-    
-    // Group forecasts by date and calculate min/max temperatures
-    const dailyTemps = {};
+    console.log('Forecast API Response:', forecastData);
+
+    // Group forecasts by date, considering only mid-day values (around 12:00 PM)
+    const dailyForecasts = {};
 
     forecastData.list.forEach(item => {
-      const date = item.dt_txt.split(' ')[0]; // Extract YYYY-MM-DD
-
-      if (!dailyTemps[date]) {
-        dailyTemps[date] = {
-          min: item.main.temp,
-          max: item.main.temp,
+      const date = item.dt_txt.split(' ')[0];
+      const time = item.dt_txt.split(' ')[1];
+      
+      if (time === '12:00:00') {
+        dailyForecasts[date] = {
+          date: new Date(date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' }),
+          min: item.main.temp_min.toFixed(1),
+          max: item.main.temp_max.toFixed(1),
           icon: item.weather[0].icon,
-          description: item.weather[0].description
+          description: capitalizeFirstLetter(item.weather[0].description)
         };
-      } else {
-        dailyTemps[date].min = Math.min(dailyTemps[date].min, item.main.temp);
-        dailyTemps[date].max = Math.max(dailyTemps[date].max, item.main.temp);
       }
     });
 
-    // Convert to an array and take the next 4 days (excluding today)
-    const dailyForecasts = Object.keys(dailyTemps).slice(1, 5).map(date => ({
-      date: new Date(date).toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' }),
-      min: dailyTemps[date].min.toFixed(1),
-      max: dailyTemps[date].max.toFixed(1),
-      icon: dailyTemps[date].icon,
-      description: dailyTemps[date].description
-    }));
+    // Convert object to array and limit to the next 4 days
+    const forecastArray = Object.values(dailyForecasts).slice(0, 4);
 
-    displayForecast(dailyForecasts);
+    displayForecast(forecastArray);
   } catch (error) {
     console.error('Error fetching forecast data:', error);
   }
@@ -86,10 +82,9 @@ async function getWeatherForecast() {
 // Display the forecast data
 function displayForecast(dailyForecasts) {
   const forecastContainer = document.getElementById('forecast');
-  forecastContainer.innerHTML = ''; // Clear any previous content
+  forecastContainer.innerHTML = ''; 
 
   dailyForecasts.forEach(day => {
-    // Create forecast day card
     const forecastCard = `
       <div class="forecast-day">
         <div class="day">${day.date}</div>
@@ -99,7 +94,6 @@ function displayForecast(dailyForecasts) {
       </div>
     `;
     
-    // Append to forecast container
     forecastContainer.innerHTML += forecastCard;
   });
 }
