@@ -10,6 +10,10 @@ function convertTo24HourTime(timestamp, timezoneOffset) {
     .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
+function capitalizeFirstLetter(text) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 async function checkWeather() {
   try {
     const response = await fetch(apiUrl);
@@ -24,7 +28,7 @@ async function checkWeather() {
     document.getElementById('sunset').innerHTML = convertTo24HourTime(data.sys.sunset, data.timezone);
     document.getElementById('time').innerHTML = `Local Time: ${convertTo24HourTime(data.dt, data.timezone)}`;
   
-    document.getElementById('weather-condition').innerHTML = data.weather[0].description;
+    document.getElementById('weather-condition').innerHTML = capitalizeFirstLetter(data.weather[0].description);
     const weatherIcon = document.getElementById('weather-icon').querySelector('img');
     weatherIcon.src = `http://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`;
     weatherIcon.alt = data.weather[0].description;  
